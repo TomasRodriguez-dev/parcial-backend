@@ -68,4 +68,49 @@ const deleteProducto = async (req, res) => {
     }
 };
 
-module.exports = { getProducto,  getProductoporId, createProducto, updateProducto, deleteProducto };
+const getProductosOrdenados = async (req, res) => {
+    try {
+        const { orden } = req.query; 
+        const criteriosOrdenacion = ['nombre', 'precio', 'cantidad'];
+
+        if (!criteriosOrdenacion.includes(orden)) {
+            return res.status(400).json({ error: 'Ordenacion no válida' });
+        }
+
+        const productos = await Producto.findAll();
+        
+        productos.sort((a, b) => {
+            if (a[orden] < b[orden]) return -1;
+            if (a[orden] > b[orden]) return 1;
+            return 0;
+        });
+        
+        res.json(productos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener productos ordenados' });
+    }
+};
+
+const getProductosFiltrados = async (req, res) => {
+    try {
+        const { precio, categoria } = req.query;
+        const productos = await Producto.findAll();
+        
+        const productosFiltrados = productos.filter(producto => {
+            let cumple = true;
+            if (precio) {
+                cumple = cumple && producto.precio > parseFloat(precio);
+            }
+            if (categoria) {
+                cumple = cumple && producto.categoria === categoria;
+            }
+            return cumple;
+        });
+        
+        res.json(productosFiltrados);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener productos filtrados' });
+    }
+};
+
+module.exports = { getProducto, getProductoporId, createProducto, updateProducto, deleteProducto, getProductosOrdenados, getProductosFiltrados };
